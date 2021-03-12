@@ -7,8 +7,4 @@
 
 # What is this?
 
-This is a helper library for interacting with docker, particularly in continuous integration workflows
-
-## Note:
-
-This library was open sourced as a dependency for another project. While this is functional, documentation may be lacking for a bit.
+This is a helper library for interacting with docker by [entropy](https://entropy.rocks), particularly in continuous integration workflows. It provides a canonical way to create volumes, containers, images, etc and tear them down.

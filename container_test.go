@@ -35,7 +35,9 @@ func (c TestClient) CreateTestContainer() (id string, err error) {
 func TestContainerLifecycle(t *testing.T) {
 	output := gofakeit.Word()
 	client := TestClient{NewDockerClient()}
-	defer Nil(t, client.TeardownSession())
+	defer func() {
+		Nil(t, client.TeardownSession())
+	}()
 	id, err := client.CreateTestContainer()
 	Nil(t, err)
 
