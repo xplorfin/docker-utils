@@ -1,11 +1,13 @@
 package docker
 
-import "testing"
+import (
+	"testing"
+
+	. "github.com/stretchr/testify/assert"
+)
 
 func TestNewClient(t *testing.T) {
 	client := NewDockerClient()
 	_, err := client.Info(client.Ctx)
-	if err != nil {
-		t.Error(err)
-	}
+	Nil(t, err)
 }

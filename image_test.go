@@ -1,11 +1,13 @@
 package docker
 
-import "testing"
+import (
+	"testing"
+
+	. "github.com/stretchr/testify/assert"
+)
 
 func TestPullImage(t *testing.T) {
 	client := NewDockerClient()
 	err := client.PullImage("docker.io/library/alpine")
-	if err != nil {
-		t.Error(err)
-	}
+	Nil(t, err)
 }
