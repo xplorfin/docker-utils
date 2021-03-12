@@ -3,8 +3,11 @@ package docker
 import (
 	"testing"
 
+	"github.com/brianvoe/gofakeit/v5"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	. "github.com/stretchr/testify/assert"
 )
 
 type TestClient struct {
@@ -30,17 +33,16 @@ func (c TestClient) CreateTestContainer() (id string, err error) {
 }
 
 func TestContainerLifecycle(t *testing.T) {
+	output := gofakeit.Word()
 	client := TestClient{NewDockerClient()}
-	defer client.TeardownSession()
+	defer Nil(t, client.TeardownSession())
 	id, err := client.CreateTestContainer()
-	if err != nil {
-		t.Error(err)
-	}
-	res, err := client.Exec(id, []string{"echo", "hi"})
-	if err != nil {
-		t.Error(err)
-	}
-	if res.ExitCode != 0 && res.StdErr != "" && res.StdOut != "hi" {
+	Nil(t, err)
+
+	res, err := client.Exec(id, []string{"echo", output})
+	Nil(t, err)
+
+	if res.ExitCode != 0 && res.StdErr != "" && res.StdOut != output {
 		t.Errorf("expeceted output to equal %s", "hi")
 	}
 }

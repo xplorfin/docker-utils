@@ -13,15 +13,21 @@ import (
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
+// ExecResult gets the result of a executed docker command
 type ExecResult struct {
-	// stdout output
+	// StdOut displays what is send to stdout by the container. This is normally in docker logs
+	// See: https://docs.docker.com/config/containers/logging/
 	StdOut string
-	// stderr output
+	// StdOut displays what is send to stderr by the container. This is normally in docker logs
+	// See: https://docs.docker.com/config/containers/logging/
 	StdErr string
-	// exit code of the process: https://tldp.org/LDP/abs/html/exitcodes.html
+	// ExitCode of the process. See https://tldp.org/LDP/abs/html/exitcodes.html for details
 	ExitCode int
 }
 
+// InspectExecResp copies container execution results into an ExecResult
+// object after thje command is finished executing. Returns error on failure
+// See: https://docs.docker.com/engine/reference/commandline/attach/ for details
 func (c *Client) InspectExecResp(ctx context.Context, id string) (ExecResult, error) {
 	var execResult ExecResult
 
@@ -72,10 +78,12 @@ func (c *Client) InspectExecResp(ctx context.Context, id string) (ExecResult, er
 	return execResult, nil
 }
 
-// exec method that allows you to pass your own config
-// make sure you attach stderr and stdout if you need them
-func (c *Client) ExecRaw(containerId string, config types.ExecConfig) (ExecResult, error) {
-	execution, err := c.ContainerExecCreate(c.Ctx, containerId, config)
+// ExecRaw allows you to pass a custom types.ExecConfig to a container
+// running your command. This method will then attach to the container and return ExecResult
+// using InspectExecResp. See https://docs.docker.com/engine/reference/commandline/exec/
+// or Client.ContainerExecCreate for details
+func (c *Client) ExecRaw(containerID string, config types.ExecConfig) (ExecResult, error) {
+	execution, err := c.ContainerExecCreate(c.Ctx, containerID, config)
 	if err != nil {
 		return ExecResult{}, err
 	}
@@ -83,17 +91,22 @@ func (c *Client) ExecRaw(containerId string, config types.ExecConfig) (ExecResul
 	return c.InspectExecResp(c.Ctx, execution.ID)
 }
 
-func (c *Client) Exec(containerId string, cmd []string) (ExecResult, error) {
+// Exec executes a command cmd in a container using ExecRaw
+// This method will then attach to the container and return ExecResult
+// using InspectExecResp. See https://docs.docker.com/engine/reference/commandline/exec/ for details
+func (c *Client) Exec(containerID string, cmd []string) (ExecResult, error) {
 	config := types.ExecConfig{
 		AttachStderr: true,
 		AttachStdout: true,
 		Cmd:          cmd,
 	}
 
-	return c.ExecRaw(containerId, config)
+	return c.ExecRaw(containerID, config)
 }
 
-// wrapper around container create. Pulls image first/adds context
+// CreateContainer creates a container with a given *container.Config
+// making sure to pull the image using PullImage if not present and session the SessionId
+// for variadic teardown. See https://docs.docker.com/engine/reference/commandline/create/ for details
 func (c Client) CreateContainer(config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, platform *specs.Platform, containerName string) (container.ContainerCreateCreatedBody, error) {
 	err := c.PullImage(config.Image)
 	if err != nil {
@@ -102,14 +115,16 @@ func (c Client) CreateContainer(config *container.Config, hostConfig *container.
 	if config.Labels == nil {
 		config.Labels = make(map[string]string)
 	}
-	config.Labels["sessionId"] = c.SessionId
+	config.Labels["sessionId"] = c.SessionID
 	return c.ContainerCreate(c.Ctx, config, hostConfig, networkingConfig, platform, containerName)
 }
 
-// copy container lgos to stdout
-func (c Client) PrintContainerLogs(containerId string) {
+// PrintContainerLogs copies logs for a running, non-executing command to stdout
+// See https://docs.docker.com/engine/reference/commandline/logs/ for details
+// TODO: in the futre this should be more flexible
+func (c Client) PrintContainerLogs(containerID string) {
 	go func() {
-		statusCh, errCh := c.ContainerWait(c.Ctx, containerId, container.WaitConditionNotRunning)
+		statusCh, errCh := c.ContainerWait(c.Ctx, containerID, container.WaitConditionNotRunning)
 		select {
 		case err := <-errCh:
 			if err != nil {
@@ -118,7 +133,7 @@ func (c Client) PrintContainerLogs(containerId string) {
 		case <-statusCh:
 		}
 
-		out, err := c.ContainerLogs(c.Ctx, containerId, types.ContainerLogsOptions{ShowStdout: true})
+		out, err := c.ContainerLogs(c.Ctx, containerID, types.ContainerLogsOptions{ShowStdout: true})
 		if err != nil {
 			// container is dead
 			return

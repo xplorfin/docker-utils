@@ -7,7 +7,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 )
 
-// removes *everything* created during this session
+// TeardownSession removes all resources created during the session
 func (c *Client) TeardownSession() (err error) {
 	err = c.TeardownSessionContainers()
 	if err != nil {
@@ -16,11 +16,13 @@ func (c *Client) TeardownSession() (err error) {
 	return c.TeardownSessionVolumes()
 }
 
-// remove volumes created in this session
+// TeardownSessionVolumes removes containers created in the current session using RemoveVolume
+// the current session is determined based on the Client so this method should be called
+// once per Client
 func (c *Client) TeardownSessionVolumes() error {
 	volumes, err := c.VolumeList(c.Ctx, filters.NewArgs(filters.KeyValuePair{
 		Key:   "label",
-		Value: fmt.Sprintf("sessionId=%s", c.SessionId),
+		Value: fmt.Sprintf("sessionId=%s", c.SessionID),
 	}))
 
 	if err != nil {
@@ -37,13 +39,15 @@ func (c *Client) TeardownSessionVolumes() error {
 	return err
 }
 
-// remove containers created in this session
+// TeardownSessionContainers removes containers created in the current session using StopContainer
+// and RemoveContainer the current session is determined based on the Client
+// so this method should be called once per Client
 func (c *Client) TeardownSessionContainers() error {
 	filter := types.ContainerListOptions{
 		All: true,
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "label",
-			Value: fmt.Sprintf("sessionId=%s", c.SessionId),
+			Value: fmt.Sprintf("sessionId=%s", c.SessionID),
 		}),
 	}
 
