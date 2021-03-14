@@ -142,3 +142,14 @@ func (c Client) PrintContainerLogs(containerID string) {
 	}()
 
 }
+
+// ContainerStatus fetches a container's status and normalizes it
+// see: https://docs.docker.com/engine/reference/commandline/inspect/
+func (c Client) ContainerStatus(containerID string) (ContainerStatus, error) {
+	inspectedContainer, err := c.ContainerInspect(c.Ctx, containerID)
+	if err != nil {
+		return "", err
+	}
+
+	return ContainerStatus(inspectedContainer.ContainerJSONBase.State.Status), err
+}
