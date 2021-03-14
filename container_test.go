@@ -14,11 +14,13 @@ type TestClient struct {
 	Client
 }
 
-func (c TestClient) CreateTestContainer() (id string, err error) {
+func (c TestClient) CreateTestContainer(network string) (id string, err error) {
 	created, err := c.CreateContainer(&container.Config{
 		Image: "docker.io/library/alpine",
 		Tty:   false,
-	}, nil, nil, nil, "")
+	}, &container.HostConfig{
+		NetworkMode: container.NetworkMode(network),
+	}, nil, nil, "")
 
 	if err != nil {
 		return id, err
@@ -33,22 +35,27 @@ func (c TestClient) CreateTestContainer() (id string, err error) {
 }
 
 func TestContainerLifecycle(t *testing.T) {
-	output := gofakeit.Word()
 	client := TestClient{NewDockerClient()}
-	defer func() {
-		Nil(t, client.TeardownSession())
-	}()
-	id, err := client.CreateTestContainer()
+	// we run this twice to ensure teardown occured correctly
+	containerNetworkName := gofakeit.Word()
+	containerOutput := gofakeit.Word()
+
+	networkID, err := client.CreateNetwork(containerNetworkName)
 	Nil(t, err)
 
-	res, err := client.Exec(id, []string{"echo", output})
+	id, err := client.CreateTestContainer(networkID)
 	Nil(t, err)
 
-	if res.ExitCode != 0 && res.StdErr != "" && res.StdOut != output {
-		t.Errorf("expeceted output to equal %s", "hi")
+	res, err := client.Exec(id, []string{"echo", containerOutput})
+	Nil(t, err)
+
+	if res.ExitCode != 0 && res.StdErr != "" && res.StdOut != containerOutput {
+		t.Errorf("expeceted containerOutput to equal %s", "hi")
 	}
 
 	// TODO verify
 	_, err = client.ContainerStatus(id)
 	Nil(t, err)
+
+	Nil(t, client.TeardownSession())
 }

@@ -1,29 +1,32 @@
 package docker
 
 import (
-	"fmt"
-
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/filters"
+	"github.com/hashicorp/go-multierror"
 )
 
 // TeardownSession removes all resources created during the session
 func (c *Client) TeardownSession() (err error) {
 	err = c.TeardownSessionContainers()
 	if err != nil {
-		return err
+		err = multierror.Append(err)
 	}
-	return c.TeardownSessionVolumes()
+	err = c.TeardownSessionVolumes()
+	if err != nil {
+		err = multierror.Append(err)
+	}
+	err = c.TeardownSessionNetworks()
+	if err != nil {
+		err = multierror.Append(err)
+	}
+	return err
 }
 
 // TeardownSessionVolumes removes containers created in the current session using RemoveVolume
 // the current session is determined based on the Client so this method should be called
 // once per Client
-func (c *Client) TeardownSessionVolumes() error {
-	volumes, err := c.VolumeList(c.Ctx, filters.NewArgs(filters.KeyValuePair{
-		Key:   "label",
-		Value: fmt.Sprintf("sessionId=%s", c.SessionID),
-	}))
+func (c *Client) TeardownSessionVolumes() (err error) {
+	volumes, err := c.VolumeList(c.Ctx, filterByLabels(c.getSessionLabels()))
 
 	if err != nil {
 		return err
@@ -39,16 +42,31 @@ func (c *Client) TeardownSessionVolumes() error {
 	return err
 }
 
+// TeardownSessionNetworks removes containers created in the current session using StopContainer
+// and RemoveContainer the current session is determined based on the Client
+// so this method should be called once per Client
+func (c *Client) TeardownSessionNetworks() (err error) {
+	networks, err := c.NetworkList(c.Ctx, types.NetworkListOptions{Filters: filterByLabels(c.getSessionLabels())})
+	if err != nil {
+		return err
+	}
+
+	for _, network := range networks {
+		err = c.RemoveNetwork(network.ID)
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
 // TeardownSessionContainers removes containers created in the current session using StopContainer
 // and RemoveContainer the current session is determined based on the Client
 // so this method should be called once per Client
-func (c *Client) TeardownSessionContainers() error {
+func (c *Client) TeardownSessionContainers() (err error) {
 	filter := types.ContainerListOptions{
-		All: true,
-		Filters: filters.NewArgs(filters.KeyValuePair{
-			Key:   "label",
-			Value: fmt.Sprintf("sessionId=%s", c.SessionID),
-		}),
+		All:     true,
+		Filters: filterByLabels(c.getSessionLabels()),
 	}
 
 	containers, err := c.ContainerList(c.Ctx, filter)
