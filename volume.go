@@ -55,9 +55,7 @@ func (c *Client) CreateVolume(name string) (err error) {
 	vol, err := c.VolumeCreate(c.Ctx, volume.VolumeCreateBody{
 		Driver: Driver,
 		Name:   name,
-		Labels: map[string]string{
-			"sessionId": c.SessionID,
-		},
+		Labels: c.getSessionLabels(),
 	})
 	if err != nil {
 		return err
