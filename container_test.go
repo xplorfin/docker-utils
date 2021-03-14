@@ -47,4 +47,8 @@ func TestContainerLifecycle(t *testing.T) {
 	if res.ExitCode != 0 && res.StdErr != "" && res.StdOut != output {
 		t.Errorf("expeceted output to equal %s", "hi")
 	}
+
+	// TODO verify
+	_, err = client.ContainerStatus(id)
+	Nil(t, err)
 }

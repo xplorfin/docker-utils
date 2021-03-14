@@ -51,7 +51,6 @@ func (c *Client) TeardownSessionContainers() error {
 		}),
 	}
 
-	_ = filter
 	containers, err := c.ContainerList(c.Ctx, filter)
 
 	if err != nil {
