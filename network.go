@@ -10,7 +10,7 @@ func (c Client) CreateNetwork(name string) (networkID string, err error) {
 		types.NetworkCreate{
 			CheckDuplicate: true,
 			Attachable:     true,
-			Labels:         c.getSessionLabels(),
+			Labels:         c.GetSessionLabels(),
 		})
 	if err != nil {
 		return "", err

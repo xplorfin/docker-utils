@@ -26,7 +26,7 @@ func (c *Client) TeardownSession() (err error) {
 // the current session is determined based on the Client so this method should be called
 // once per Client
 func (c *Client) TeardownSessionVolumes() (err error) {
-	volumes, err := c.VolumeList(c.Ctx, filterByLabels(c.getSessionLabels()))
+	volumes, err := c.VolumeList(c.Ctx, FilterByLabels(c.GetSessionLabels()))
 
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (c *Client) TeardownSessionVolumes() (err error) {
 // and RemoveContainer the current session is determined based on the Client
 // so this method should be called once per Client
 func (c *Client) TeardownSessionNetworks() (err error) {
-	networks, err := c.NetworkList(c.Ctx, types.NetworkListOptions{Filters: filterByLabels(c.getSessionLabels())})
+	networks, err := c.NetworkList(c.Ctx, types.NetworkListOptions{Filters: FilterByLabels(c.GetSessionLabels())})
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (c *Client) TeardownSessionNetworks() (err error) {
 func (c *Client) TeardownSessionContainers() (err error) {
 	filter := types.ContainerListOptions{
 		All:     true,
-		Filters: filterByLabels(c.getSessionLabels()),
+		Filters: FilterByLabels(c.GetSessionLabels()),
 	}
 
 	containers, err := c.ContainerList(c.Ctx, filter)
