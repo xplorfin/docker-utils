@@ -36,7 +36,7 @@ func (c TestClient) CreateTestContainer(network string) (id string, err error) {
 
 func TestContainerLifecycle(t *testing.T) {
 	client := TestClient{NewDockerClient()}
-	// we run this twice to ensure teardown occured correctly
+	// we run this twice to ensure teardown occurred correctly
 	containerNetworkName := gofakeit.Word()
 	containerOutput := gofakeit.Word()
 
