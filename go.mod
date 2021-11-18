@@ -18,7 +18,7 @@ require (
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.1
+	github.com/opencontainers/image-spec v1.0.2
 	github.com/sirupsen/logrus v1.8.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
