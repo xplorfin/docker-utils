@@ -11,8 +11,7 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-cmp v0.5.4 // indirect
-	github.com/google/uuid v1.2.0
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
@@ -20,8 +19,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/sirupsen/logrus v1.8.0 // indirect
-	github.com/stretchr/testify v1.7.0
-	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	google.golang.org/grpc v1.36.0 // indirect
+	github.com/stretchr/testify v1.8.1
+	google.golang.org/grpc v1.53.0 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 )
